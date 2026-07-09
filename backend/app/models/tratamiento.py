@@ -1,5 +1,5 @@
 from decimal import Decimal
-from sqlalchemy import String, Numeric
+from sqlalchemy import String, Numeric, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -10,6 +10,8 @@ class Tratamiento(Base):
 
     id_tratamiento: Mapped[int] = mapped_column(primary_key=True)
     nombre: Mapped[str] = mapped_column(String(100))
+    tipo_tratamiento: Mapped[str] = mapped_column(Text)
+    descripcion: Mapped[str] = mapped_column(Text)
     tarifa_por_kg: Mapped[Decimal] = mapped_column(Numeric(10, 2))
 
     def __repr__(self) -> str:
