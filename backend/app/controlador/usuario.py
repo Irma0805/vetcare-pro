@@ -11,7 +11,12 @@ from app.validation.password import verify_password
 
 
 def authenticate_user(db: Session, username: str, password: str) -> Usuario | None:
-   
+    """
+    Verifica las credenciales de login (CU-01).
+    Devuelve el Usuario si son válidas, o None ante CUALQUIER motivo de
+    rechazo (no existe, inactivo, contraseña incorrecta) — nunca se
+    distingue el motivo aquí, para no filtrar esa información más arriba.
+    """
     usuario = db.execute(
         select(Usuario).where(Usuario.username == username)
     ).scalar_one_or_none()
@@ -29,7 +34,10 @@ def authenticate_user(db: Session, username: str, password: str) -> Usuario | No
 
 
 def create_access_token(username: str) -> str:
-
+    """
+    Genera un JWT firmado para el usuario autenticado, con expiración
+    a los settings.jwt_access_token_expire_minutes minutos (ADR-006).
+    """
     now = datetime.now(timezone.utc)
     payload = {
         "sub": username,
