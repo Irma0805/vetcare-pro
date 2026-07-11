@@ -5,7 +5,11 @@ from app.database import Base
 
 
 class Usuario(Base):
-
+    """
+    Representa al administrador único del sistema (ADR-002).
+    No existe tabla Rol ni relación con Veterinario: la autenticación
+    está completamente desacoplada del personal clínico.
+    """
     __tablename__ = "usuarios"
 
     id_usuario: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
