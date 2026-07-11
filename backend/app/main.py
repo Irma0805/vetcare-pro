@@ -1,8 +1,7 @@
 from fastapi import FastAPI
 
+from app.routers import usuario
+
 app = FastAPI(title="VetCare Pro API")
 
-
-@app.get("/")
-def read_root():
-    return {"mensaje": "VetCare Pro API funcionando"}
+app.include_router(usuario.router)
