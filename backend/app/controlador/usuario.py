@@ -1,48 +1,63 @@
-import uuid
-from datetime import datetime, timedelta, timezone
-
-import jwt
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.config import settings
-from app.models.usuario import Usuario
-from app.validation.password import verify_password
+from app.service.usuario import (
+    authenticate_user,
+    create_session,
+    invalidate_session,
+    verify_active_session,
+    update_last_activity,
+)
+from app.validation.security import create_access_token, decode_access_token
+from app.schemas.usuario import TokenResponse, LogoutResponse
 
 
-def authenticate_user(db: Session, username: str, password: str) -> Usuario | None:
+def login(db: Session, username: str, password: str) -> TokenResponse | None:
     """
-    Verifica las credenciales de login (CU-01).
-    Devuelve el Usuario si son válidas, o None ante CUALQUIER motivo de
-    rechazo (no existe, inactivo, contraseña incorrecta) — nunca se
-    distingue el motivo aquí, para no filtrar esa información más arriba.
+    Orquesta el login (FUS-01/CU-01): verifica credenciales a través
+    del service, genera el JWT (validation/security.py) y registra la
+    sesión nueva. Devuelve None ante credenciales inválidas — es el
+    router quien decide el código HTTP 401, no esta función.
     """
-    usuario = db.execute(
-        select(Usuario).where(Usuario.username == username)
-    ).scalar_one_or_none()
+    usuario = authenticate_user(db, username, password)
 
     if usuario is None:
         return None
 
-    if not usuario.activo:
+    access_token, jti = create_access_token(usuario.username)
+    create_session(db, jti)
+
+    return TokenResponse(access_token=access_token)
+
+
+def logout(db: Session, jti: str) -> LogoutResponse:
+    """
+    Orquesta el logout (FUS-02/CU-02): invalida la sesión actual a
+    través del service.
+    """
+    invalidate_session(db, jti)
+    return LogoutResponse()
+
+
+def obtener_usuario_actual(db: Session, token: str) -> dict | None:
+    """
+    Orquesta la verificación de sesión en cada petición protegida
+    (invocada desde get_current_user en dependencies.py): decodifica
+    el JWT (validation/security.py), comprueba que la sesión sigue
+    activa y renueva la última actividad (sliding expiration, ADR-006).
+    Devuelve None ante CUALQUIER motivo de rechazo — es dependencies.py
+    quien decide lanzar el 401, con el mismo mensaje genérico de
+    siempre, sin distinguir el motivo real.
+    """
+    datos_token = decode_access_token(token)
+
+    if datos_token is None:
         return None
 
-    if not verify_password(password, usuario.password_hash):
+    jti = datos_token["jti"]
+
+    if not verify_active_session(db, jti):
         return None
 
-    return usuario
+    update_last_activity(db, jti)
 
-
-def create_access_token(username: str) -> str:
-    """
-    Genera un JWT firmado para el usuario autenticado, con expiración
-    a los settings.jwt_access_token_expire_minutes minutos (ADR-006).
-    """
-    now = datetime.now(timezone.utc)
-    payload = {
-        "sub": username,
-        "jti": str(uuid.uuid4()),
-        "iat": now,
-        "exp": now + timedelta(minutes=settings.jwt_access_token_expire_minutes),
-    }
-    return jwt.encode(payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
+    return datos_token

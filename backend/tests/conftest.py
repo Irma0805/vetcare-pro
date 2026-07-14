@@ -8,6 +8,8 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from app.database import Base, get_db
 from app.main import app
+from app.models.usuario import Usuario
+from app.validation.password import hash_password
 
 
 class TestSettings(BaseSettings):
@@ -72,3 +74,30 @@ def client(db: Session) -> Generator[TestClient, None, None]:
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def crear_usuario():
+    """
+    Factory fixture (patrón "Factories as fixtures" de pytest): en vez de
+    devolver un dato fijo, devuelve una función que cada test puede
+    llamar tantas veces como necesite, con los parámetros propios de
+    cada escenario Gherkin.
+
+    La función devuelta inserta un Usuario directamente en la base de
+    datos de test, sin pasar por el endpoint (sirve para preparar el
+    estado previo de cada escenario, no para probar la creación de
+    usuarios).
+    """
+    def _crear_usuario(db: Session, username: str, password: str, activo: bool = True) -> Usuario:
+        usuario = Usuario(
+            username=username,
+            password_hash=hash_password(password),
+            activo=activo,
+        )
+        db.add(usuario)
+        db.flush()
+        db.refresh(usuario)
+        return usuario
+
+    return _crear_usuario
