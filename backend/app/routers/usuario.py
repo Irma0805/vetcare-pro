@@ -1,12 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.controlador.usuario import (
-    authenticate_user,
-    create_access_token,
-    create_session,
-    invalidate_session,
-)
+from app.controlador.usuario import login as login_controlador, logout as logout_controlador
 from app.database import get_db
 from app.dependencies import get_current_user
 from app.schemas.usuario import LoginRequest, TokenResponse, LogoutResponse
@@ -20,21 +15,19 @@ def login(credentials: LoginRequest, db: Session = Depends(get_db)):
     Endpoint de login (FUS-01/CU-01).
     Devuelve un token JWT si las credenciales son válidas; si no,
     responde 401 con un mensaje genérico, sin distinguir el motivo.
-    Registra la sesión nueva en sesiones_invalidadas (ADR-006), base
-    para el logout (FUS-02) y la expiración por inactividad (TUS-01).
+    Toda la lógica (verificar credenciales, generar token, registrar
+    la sesión) vive en controlador.usuario.login — este endpoint solo
+    traduce el resultado a HTTP.
     """
-    usuario = authenticate_user(db, credentials.username, credentials.password)
+    resultado = login_controlador(db, credentials.username, credentials.password)
 
-    if usuario is None:
+    if resultado is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="usuario o contraseña incorrectos",
         )
 
-    access_token, jti = create_access_token(usuario.username)
-    create_session(db, jti)
-
-    return TokenResponse(access_token=access_token)
+    return resultado
 
 
 @router.post("/logout", response_model=LogoutResponse)
@@ -44,9 +37,7 @@ def logout(
 ):
     """
     Endpoint de logout (FUS-02/CU-02).
-    Requiere sesión activa (protegido por get_current_user). Invalida
-    la sesión actual en sesiones_invalidadas — cualquier petición
-    posterior con ese mismo token será rechazada (ADR-006).
+    Requiere sesión activa (protegido por get_current_user). Toda la
+    lógica de invalidar la sesión vive en controlador.usuario.logout.
     """
-    invalidate_session(db, current_user["jti"])
-    return LogoutResponse()
+    return logout_controlador(db, current_user["jti"])
