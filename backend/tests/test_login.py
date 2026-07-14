@@ -1,25 +1,4 @@
-from app.models.usuario import Usuario
-from app.validation.password import hash_password
-
-
-def crear_usuario(db, username: str, password: str, activo: bool = True) -> Usuario:
-    """
-    Helper de test: inserta un Usuario directamente en la base de datos
-    de test, sin pasar por el endpoint (para preparar el estado previo
-    de cada escenario Gherkin, no para probar la creación de usuarios).
-    """
-    usuario = Usuario(
-        username=username,
-        password_hash=hash_password(password),
-        activo=activo,
-    )
-    db.add(usuario)
-    db.flush()
-    db.refresh(usuario)
-    return usuario
-
-
-def test_login_exitoso_con_credenciales_validas(client, db):
+def test_login_exitoso_con_credenciales_validas(client, db, crear_usuario):
     """Gherkin: Login exitoso con credenciales válidas."""
     crear_usuario(db, "admin", "clave123")
 
@@ -31,7 +10,7 @@ def test_login_exitoso_con_credenciales_validas(client, db):
     assert data["token_type"] == "bearer"
 
 
-def test_login_fallido_por_contrasena_incorrecta(client, db):
+def test_login_fallido_por_contrasena_incorrecta(client, db, crear_usuario):
     """Gherkin: Login fallido por contraseña incorrecta."""
     crear_usuario(db, "admin", "clave123")
 
@@ -49,7 +28,7 @@ def test_login_fallido_por_usuario_inexistente(client):
     assert response.json()["detail"] == "usuario o contraseña incorrectos"
 
 
-def test_login_fallido_por_usuario_desactivado(client, db):
+def test_login_fallido_por_usuario_desactivado(client, db, crear_usuario):
     """Gherkin: Login fallido por usuario desactivado."""
     crear_usuario(db, "admin", "clave123", activo=False)
 
