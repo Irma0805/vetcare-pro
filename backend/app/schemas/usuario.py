@@ -16,3 +16,9 @@ class TokenResponse(BaseModel):
     """
     access_token: str
     token_type: str = "bearer"
+
+class LogoutResponse(BaseModel):
+    """
+    Respuesta que el backend devuelve tras un logout exitoso (FUS-02/CU-02).
+    """
+    message: str = "Sesión cerrada correctamente"
