@@ -49,6 +49,7 @@ def crear_cita(db: Session, datos: CitaCreate) -> Cita:
             raise MascotaNoEncontradaError()
     else:
         mascota = create_mascota(db, datos.mascota_nueva, propietario.id_propietario)
+        db.flush()
 
     veterinario = get_veterinario_activo(db, datos.veterinario_id)
     if veterinario is None:
