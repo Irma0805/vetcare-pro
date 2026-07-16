@@ -54,3 +54,14 @@ class CitaCreate(BaseModel):
                 "la reasignación de propietario está fuera de alcance del MVP."
             )
         return self
+
+class CitaResponse(BaseModel):
+    """Datos devueltos tras crear una cita (CU-04)."""
+    id_cita: int
+    fecha_hora: datetime
+    motivo_consulta: str
+    estado: str
+    id_mascota: int
+    id_veterinario: int
+
+    model_config = {"from_attributes": True}
