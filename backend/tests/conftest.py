@@ -9,6 +9,9 @@ from sqlalchemy.orm import Session, sessionmaker
 from app.database import Base, get_db
 from app.main import app
 from app.models.usuario import Usuario
+from app.models.propietario import Propietario
+from app.models.mascota import Mascota
+from app.models.veterinario import Veterinario
 from app.validation.password import hash_password
 
 
@@ -101,3 +104,74 @@ def crear_usuario():
         return usuario
 
     return _crear_usuario
+
+
+@pytest.fixture
+def crear_propietario():
+    """Factory fixture (mismo patrón que crear_usuario) para Propietario."""
+    def _crear_propietario(
+        db: Session,
+        dni: str,
+        nombre: str,
+        apellidos: str,
+        direccion: str | None = None,
+        telefono: str | None = None,
+        email: str | None = None,
+    ) -> Propietario:
+        propietario = Propietario(
+            dni=dni, nombre=nombre, apellidos=apellidos,
+            direccion=direccion, telefono=telefono, email=email,
+        )
+        db.add(propietario)
+        db.flush()
+        db.refresh(propietario)
+        return propietario
+
+    return _crear_propietario
+
+
+@pytest.fixture
+def crear_mascota():
+    """Factory fixture (mismo patrón que crear_usuario) para Mascota."""
+    def _crear_mascota(
+        db: Session,
+        nombre: str,
+        especie: str,
+        id_propietario: int,
+        raza: str | None = None,
+        fecha_nacimiento=None,
+        peso=None,
+    ) -> Mascota:
+        mascota = Mascota(
+            nombre=nombre, especie=especie, raza=raza,
+            fecha_nacimiento=fecha_nacimiento, peso=peso,
+            id_propietario=id_propietario,
+        )
+        db.add(mascota)
+        db.flush()
+        db.refresh(mascota)
+        return mascota
+
+    return _crear_mascota
+
+
+@pytest.fixture
+def crear_veterinario():
+    """Factory fixture (mismo patrón que crear_usuario) para Veterinario."""
+    def _crear_veterinario(
+        db: Session,
+        nombre: str,
+        apellidos: str,
+        especialidad: str | None = None,
+        activo: bool = True,
+    ) -> Veterinario:
+        veterinario = Veterinario(
+            nombre=nombre, apellidos=apellidos,
+            especialidad=especialidad, activo=activo,
+        )
+        db.add(veterinario)
+        db.flush()
+        db.refresh(veterinario)
+        return veterinario
+
+    return _crear_veterinario
