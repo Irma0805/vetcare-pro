@@ -5,8 +5,12 @@ Contiene únicamente operaciones directas sobre la base de datos
 (consulta y creación). No orquesta lógica de negocio ni gestiona el
 ciclo de vida de la transacción (add/flush/commit): esa responsabilidad
 vive en controlador/, que decide cuándo confirmar los cambios.
+
+Incluye get_mascotas_por_propietario (listado para la ficha de
+cliente, FUS-13/CU-14).
 """
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.mascota import Mascota
@@ -45,3 +49,14 @@ def create_mascota(db: Session, datos: MascotaCreate, id_propietario: int) -> Ma
     )
     db.add(nueva_mascota)
     return nueva_mascota
+
+
+def get_mascotas_por_propietario(db: Session, id_propietario: int) -> list[Mascota]:
+    """
+    Lista todas las mascotas de un propietario, activas e inactivas
+    (FUS-13/CU-14): una mascota dada de baja sigue siendo consultable
+    desde la ficha de su cliente, no se oculta del listado (decisión
+    ya documentada en la épica Mascotas).
+    """
+    stmt = select(Mascota).where(Mascota.id_propietario == id_propietario)
+    return list(db.scalars(stmt).all())
