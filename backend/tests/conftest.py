@@ -142,11 +142,12 @@ def crear_mascota():
         raza: str | None = None,
         fecha_nacimiento=None,
         peso=None,
+        activo: bool = True,
     ) -> Mascota:
         mascota = Mascota(
             nombre=nombre, especie=especie, raza=raza,
             fecha_nacimiento=fecha_nacimiento, peso=peso,
-            id_propietario=id_propietario,
+            id_propietario=id_propietario, activo=activo,
         )
         db.add(mascota)
         db.flush()
