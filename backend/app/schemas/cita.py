@@ -65,3 +65,20 @@ class CitaResponse(BaseModel):
     id_veterinario: int
 
     model_config = {"from_attributes": True}
+
+class CitaListItem(BaseModel):
+    """
+    Elemento del listado paginado de citas (CU-07).
+    A diferencia de CitaResponse, resuelve los nombres de mascota y
+    veterinario (vía join en la query) en vez de exponer solo IDs —
+    necesario para que el listado sea legible sin depender de otros
+    endpoints que aún no existen (FUS-21/FUS-13).
+    """
+    id_cita: int
+    fecha_hora: datetime
+    estado: str
+    mascota_nombre: str
+    veterinario_nombre: str
+    veterinario_apellidos: str
+
+    model_config = {"from_attributes": True}
