@@ -42,3 +42,18 @@ def create_veterinario(db: Session, datos: VeterinarioCreate) -> Veterinario:
     )
     db.add(veterinario)
     return veterinario
+
+def get_veterinarios_activos(db: Session, skip: int, limit: int) -> list[Veterinario]:
+    """
+    Lista veterinarios activos, ordenados por apellidos (FUS-20/CU-21).
+
+    Operación de solo lectura: no hace falta commit ni flush.
+    """
+    stmt = (
+        select(Veterinario)
+        .where(Veterinario.activo == True)  # noqa: E712 (comparación explícita, estilo SQLAlchemy)
+        .order_by(Veterinario.apellidos)
+        .offset(skip)
+        .limit(limit)
+    )
+    return list(db.scalars(stmt).all())
