@@ -2,9 +2,11 @@
 Capa de acceso a datos para la entidad Veterinario (ADR-008).
 
 Incluye create_veterinario (alta, FUS-19/CU-20) y get_veterinario_activo
-(resolución de un veterinario ya existente, usada en CU-04).
+(resolución de un veterinario ya existente, usada en CU-04) y
+get_veterinarios_activos (listado paginado, FUS-20/CU-21)..
 """
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.veterinario import Veterinario
