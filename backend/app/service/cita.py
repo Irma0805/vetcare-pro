@@ -1,16 +1,18 @@
 """
 Capa de acceso a datos para la entidad Cita (ADR-008).
 
-Contiene únicamente la creación de la cita, con los IDs de mascota y
-veterinario ya resueltos por el controlador. No incluye lectura por
-ID: CU-04 no contempla ningún escenario de búsqueda de cita existente.
+Incluye create_cita (alta, FUS-03/CU-04), contar_citas y
+get_citas_paginadas (listado paginado, FUS-06/CU-07).
 """
 
 from datetime import datetime
 
+from sqlalchemy import select, func
 from sqlalchemy.orm import Session
 
 from app.models.cita import Cita
+from app.models.mascota import Mascota
+from app.models.veterinario import Veterinario
 
 
 def create_cita(
@@ -44,3 +46,37 @@ def create_cita(
     )
     db.add(nueva_cita)
     return nueva_cita
+
+
+def contar_citas(db: Session) -> int:
+    """Total de citas registradas (FUS-06/CU-07), para calcular la última página válida."""
+    stmt = select(func.count()).select_from(Cita)
+    return db.scalar(stmt)
+
+
+def get_citas_paginadas(db: Session, skip: int, limit: int):
+    """
+    Lista citas con nombre de mascota y veterinario ya resueltos (join),
+    ordenadas por fecha_hora descendente (FUS-06/CU-07).
+
+    Devuelve filas (Row), no objetos Cita completos: la consulta
+    selecciona columnas sueltas de tres tablas, no instancias mapeadas
+    de una sola. Pydantic (from_attributes=True) lee estas filas igual
+    que un objeto ORM, verificado con evidencia real.
+    """
+    stmt = (
+        select(
+            Cita.id_cita,
+            Cita.fecha_hora,
+            Cita.estado,
+            Mascota.nombre.label("mascota_nombre"),
+            Veterinario.nombre.label("veterinario_nombre"),
+            Veterinario.apellidos.label("veterinario_apellidos"),
+        )
+        .join(Mascota, Cita.id_mascota == Mascota.id_mascota)
+        .join(Veterinario, Cita.id_veterinario == Veterinario.id_veterinario)
+        .order_by(Cita.fecha_hora.desc())
+        .offset(skip)
+        .limit(limit)
+    )
+    return db.execute(stmt).all()
