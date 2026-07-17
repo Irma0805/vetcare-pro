@@ -1,16 +1,12 @@
 """
-Orquestación de la creación de cita (FUS-03/CU-04, ADR-008).
+Orquestación de negocio para Cita (ADR-008).
 
-Resuelve propietario, mascota y veterinario a través de service/,
-sin tocar la base de datos directamente. No lanza HTTPException (eso
-es responsabilidad de routers/): lanza excepciones de dominio
-(app/exceptions.py) que el router traduce al código HTTP adecuado.
-
-Único punto de control de la transacción: un solo db.commit() al
-final, tras resolver los tres pasos previos, para garantizar
-atomicidad (verificado contra el patrón Unit of Work de SQLAlchemy).
+crear_cita: FUS-03/CU-04. listar_citas: FUS-06/CU-07.
 """
 
+import math
+
+from sqlalchemy import Row
 from sqlalchemy.orm import Session
 
 from app.schemas.cita import CitaCreate
@@ -18,12 +14,14 @@ from app.models.cita import Cita
 from app.service.propietario import get_propietario_by_id, create_propietario
 from app.service.mascota import get_mascota_by_id, create_mascota
 from app.service.veterinario import get_veterinario_activo
-from app.service.cita import create_cita
+from app.service.cita import create_cita, contar_citas, get_citas_paginadas
 from app.exceptions import (
     PropietarioNoEncontradoError,
     MascotaNoEncontradaError,
     VeterinarioNoDisponibleError,
 )
+
+TAMANO_PAGINA = 10
 
 
 def crear_cita(db: Session, datos: CitaCreate) -> Cita:
@@ -66,3 +64,24 @@ def crear_cita(db: Session, datos: CitaCreate) -> Cita:
     db.commit()
 
     return cita
+
+
+def listar_citas(db: Session, pagina: int) -> list[Row]:
+    """
+    Lista citas paginadas (FUS-06/CU-07).
+
+    Si `pagina` excede el total de páginas disponibles, se ajusta
+    ("clampea") a la última página válida en vez de devolver una
+    lista vacía o un error — así lo exige el Gherkin ("no produce
+    ningún error visible y muestra la última página válida").
+
+    Con 0 citas registradas, total_paginas queda en 1 (no en 0):
+    así pagina_efectiva siempre es un entero válido >= 1, y el
+    resultado es una lista vacía de forma natural, sin caso especial.
+    """
+    total = contar_citas(db)
+    total_paginas = max(1, math.ceil(total / TAMANO_PAGINA))
+    pagina_efectiva = min(pagina, total_paginas)
+
+    skip = (pagina_efectiva - 1) * TAMANO_PAGINA
+    return get_citas_paginadas(db, skip=skip, limit=TAMANO_PAGINA)
