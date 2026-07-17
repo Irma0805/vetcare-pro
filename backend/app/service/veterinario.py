@@ -1,14 +1,14 @@
 """
 Capa de acceso a datos para la entidad Veterinario (ADR-008).
 
-A diferencia de propietario.py y mascota.py, no incluye create_*: el
-alta de veterinario no ocurre dentro de CU-04 (tiene su propia HU,
-FUS-19). Solo se necesita resolver un veterinario_id ya existente.
+Incluye create_veterinario (alta, FUS-19/CU-20) y get_veterinario_activo
+(resolución de un veterinario ya existente, usada en CU-04).
 """
 
 from sqlalchemy.orm import Session
 
 from app.models.veterinario import Veterinario
+from app.schemas.veterinario import VeterinarioCreate
 
 
 def get_veterinario_activo(db: Session, veterinario_id: int) -> Veterinario | None:
@@ -24,4 +24,21 @@ def get_veterinario_activo(db: Session, veterinario_id: int) -> Veterinario | No
     veterinario = db.get(Veterinario, veterinario_id)
     if veterinario is None or not veterinario.activo:
         return None
+    return veterinario
+
+
+def create_veterinario(db: Session, datos: VeterinarioCreate) -> Veterinario:
+    """
+    Crea un veterinario nuevo (FUS-19/CU-20).
+
+    Solo hace db.add(): sin flush ni commit, control de transacción
+    centralizado en el controlador (mismo patrón Unit of Work que
+    propietario.py y mascota.py).
+    """
+    veterinario = Veterinario(
+        nombre=datos.nombre,
+        apellidos=datos.apellidos,
+        especialidad=datos.especialidad,
+    )
+    db.add(veterinario)
     return veterinario
