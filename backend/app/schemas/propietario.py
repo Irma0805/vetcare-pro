@@ -20,3 +20,25 @@ class PropietarioCreate(BaseModel):
     @classmethod
     def validar_dni(cls, valor: str) -> str:
         return validate_document(valor)
+
+class MascotaResumen(BaseModel):
+    """Mascota resumida dentro de la ficha de cliente (CU-14)."""
+    id_mascota: int
+    nombre: str
+    especie: str
+
+    model_config = {"from_attributes": True}
+
+
+class FichaClienteResponse(BaseModel):
+    """Ficha completa de cliente: datos de contacto + mascotas asociadas (CU-14)."""
+    id_propietario: int
+    dni: str
+    nombre: str
+    apellidos: str
+    direccion: str | None = None
+    telefono: str | None = None
+    email: str | None = None
+    mascotas: list[MascotaResumen]
+
+    model_config = {"from_attributes": True}
