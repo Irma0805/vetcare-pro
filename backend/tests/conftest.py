@@ -13,6 +13,7 @@ from app.models.propietario import Propietario
 from app.models.mascota import Mascota
 from app.models.veterinario import Veterinario
 from app.validation.password import hash_password
+from app.models.cita import Cita
 
 
 class TestSettings(BaseSettings):
@@ -175,3 +176,28 @@ def crear_veterinario():
         return veterinario
 
     return _crear_veterinario
+
+@pytest.fixture
+def crear_cita():
+    """Factory fixture (mismo patrón que crear_usuario) para Cita."""
+    def _crear_cita(
+        db: Session,
+        fecha_hora,
+        id_mascota: int,
+        id_veterinario: int,
+        motivo_consulta: str = "Consulta general",
+        estado: str = "agendada",
+    ) -> Cita:
+        cita = Cita(
+            fecha_hora=fecha_hora,
+            motivo_consulta=motivo_consulta,
+            estado=estado,
+            id_mascota=id_mascota,
+            id_veterinario=id_veterinario,
+        )
+        db.add(cita)
+        db.flush()
+        db.refresh(cita)
+        return cita
+
+    return _crear_cita
