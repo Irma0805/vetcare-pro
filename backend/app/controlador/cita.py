@@ -19,6 +19,8 @@ from app.exceptions import (
     PropietarioNoEncontradoError,
     MascotaNoEncontradaError,
     VeterinarioNoDisponibleError,
+    CitaNoEncontradaError,
+    TratamientoNoEncontradoError,
 )
 
 TAMANO_PAGINA = 10
@@ -85,3 +87,48 @@ def listar_citas(db: Session, pagina: int) -> list[Row]:
 
     skip = (pagina_efectiva - 1) * TAMANO_PAGINA
     return get_citas_paginadas(db, skip=skip, limit=TAMANO_PAGINA)
+
+def asociar_tratamiento(
+    db: Session, cita_id: int, datos: AsociarTratamientoCreate
+) -> CitasTratamientos:
+    """
+    Orquesta CU-06: comprueba que la cita y el tratamiento existen,
+    calcula valor_tratamiento y crea el registro en Citas_Tratamientos.
+
+    valor_tratamiento = peso de la mascota × tarifa_por_kg del
+    tratamiento. Si la mascota no tiene peso registrado, queda en
+    None (no bloquea la asociación, tal como exige el Gherkin).
+
+    Este cálculo vive aquí, no en service/, porque combina datos de
+    dos entidades distintas (Mascota y Tratamiento) — es orquestación
+    de negocio, no acceso a datos puro.
+    """
+    cita = get_cita_by_id(db, cita_id)
+    if cita is None:
+        raise CitaNoEncontradaError()
+
+    tratamiento = get_tratamiento_by_id(db, datos.id_tratamiento)
+    if tratamiento is None:
+        raise TratamientoNoEncontradoError()
+
+    mascota = get_mascota_by_id(db, cita.id_mascota)
+
+    if mascota.peso is not None:
+        valor_tratamiento = mascota.peso * tratamiento.tarifa_por_kg
+    else:
+        valor_tratamiento = None
+
+    registro = create_cita_tratamiento(
+        db,
+        id_cita=cita.id_cita,
+        id_tratamiento=tratamiento.id_tratamiento,
+        fecha_inicio=datos.fecha_inicio,
+        fecha_fin=datos.fecha_fin,
+        dosis=datos.dosis,
+        seguimiento=datos.seguimiento,
+        valor_tratamiento=valor_tratamiento,
+    )
+
+    db.commit()
+
+    return registro
