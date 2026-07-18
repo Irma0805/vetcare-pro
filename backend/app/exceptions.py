@@ -32,3 +32,10 @@ class CitaNoEncontradaError(Exception):
 
 class TratamientoNoEncontradoError(Exception):
     """El tratamiento_id indicado no corresponde a ningún tratamiento existente."""
+
+class CitaYaRealizadaError(Exception):
+    """La cita indicada ya tiene fecha y hora pasadas; no puede cancelarse."""
+
+
+class CitaYaCanceladaError(Exception):
+    """La cita indicada ya está en estado 'cancelada'."""
