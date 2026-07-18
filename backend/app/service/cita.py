@@ -80,3 +80,13 @@ def get_citas_paginadas(db: Session, skip: int, limit: int):
         .limit(limit)
     )
     return db.execute(stmt).all()
+
+def get_cita_by_id(db: Session, cita_id: int) -> Cita | None:
+    """
+    Consulta una cita existente por su ID.
+
+    Devuelve None si no existe; es responsabilidad del controlador
+    decidir qué error de negocio corresponde ante esa ausencia
+    (mismo patrón ya aplicado en get_mascota_by_id / get_propietario_by_id).
+    """
+    return db.get(Cita, cita_id)
