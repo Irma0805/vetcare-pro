@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from sqlalchemy import Row
 from sqlalchemy.orm import Session
 
-from app.schemas.cita import CitaCreate
+from app.schemas.cita import CitaCreate, DiagnosticoUpdate
 from app.schemas.tratamiento import AsociarTratamientoCreate
 from app.models.cita import Cita, EstadoCita
 from app.models.citas_tratamientos import CitasTratamientos
@@ -23,6 +23,7 @@ from app.service.cita import (
     get_citas_paginadas,
     get_cita_by_id,
     cancelar_cita_bd,
+    registrar_diagnostico_bd,
 )
 from app.service.tratamiento import get_tratamiento_by_id
 from app.service.citas_tratamientos import create_cita_tratamiento
@@ -34,6 +35,7 @@ from app.exceptions import (
     TratamientoNoEncontradoError,
     CitaYaRealizadaError,
     CitaYaCanceladaError,
+    CitaNoRealizadaAunError,
 )
 
 TAMANO_PAGINA = 10
@@ -171,3 +173,25 @@ def cancelar_cita(db: Session, cita_id: int) -> Cita:
     db.commit()
 
     return cita_cancelada
+
+def registrar_diagnostico(db: Session, cita_id: int, datos: DiagnosticoUpdate) -> Cita:
+    """
+    Orquesta CU-05: comprueba que la cita existe y que ya se ha
+    realizado (fecha/hora pasada), y actualiza su diagnóstico.
+
+    No valida el estado de la cita (agendada/cancelada): el Gherkin
+    solo condiciona esta acción a la fecha, no al estado — a
+    diferencia de cancelar_cita (CU-09), que sí lo exige.
+    """
+    cita = get_cita_by_id(db, cita_id)
+    if cita is None:
+        raise CitaNoEncontradaError()
+
+    if cita.fecha_hora >= datetime.now(timezone.utc):
+        raise CitaNoRealizadaAunError()
+
+    cita_actualizada = registrar_diagnostico_bd(db, cita, datos.diagnostico)
+
+    db.commit()
+
+    return cita_actualizada
