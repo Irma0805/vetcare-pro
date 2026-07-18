@@ -5,8 +5,9 @@ from app.controlador.cita import crear_cita as crear_cita_controlador
 from app.controlador.cita import listar_citas as listar_citas_controlador
 from app.controlador.cita import asociar_tratamiento as asociar_tratamiento_controlador
 from app.controlador.cita import cancelar_cita as cancelar_cita_controlador
+from app.controlador.cita import registrar_diagnostico as registrar_diagnostico_controlador
 from app.database import get_db
-from app.schemas.cita import CitaCreate, CitaListItem, CitaResponse
+from app.schemas.cita import CitaCreate, CitaListItem, CitaResponse, DiagnosticoUpdate
 from app.schemas.tratamiento import AsociarTratamientoCreate, CitaTratamientoResponse
 from app.exceptions import (
     PropietarioNoEncontradoError,
@@ -16,6 +17,7 @@ from app.exceptions import (
     TratamientoNoEncontradoError,
     CitaYaRealizadaError,
     CitaYaCanceladaError,
+    CitaNoRealizadaAunError,
 )
 
 router = APIRouter(tags=["Gestión de Citas"])
@@ -113,4 +115,27 @@ def cancelar_cita(cita_id: int, db: Session = Depends(get_db)):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="La cita ya se ha realizado y no puede cancelarse",
+        )
+
+@router.patch("/citas/{cita_id}/diagnostico", response_model=CitaResponse)
+def registrar_diagnostico(cita_id: int, datos: DiagnosticoUpdate, db: Session = Depends(get_db)):
+    """
+    Endpoint de registro/edición de diagnóstico (FUS-04/CU-05).
+    PATCH, no POST: a diferencia de cancelar_cita (acción con efectos
+    colaterales de negocio), esto es la actualización parcial de un
+    único campo de un recurso ya existente — el caso canónico de
+    PATCH según convención REST (verificado contra Azure API Design
+    Guide y consenso de comunidad).
+    """
+    try:
+        return registrar_diagnostico_controlador(db, cita_id, datos)
+    except CitaNoEncontradaError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="La cita indicada no existe",
+        )
+    except CitaNoRealizadaAunError:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="La cita aún no se ha realizado",
         )
