@@ -12,7 +12,8 @@ class Cita(Base):
     __tablename__ = "citas"
 
     id_cita: Mapped[int] = mapped_column(primary_key=True)
-    fecha_hora: Mapped[datetime] = mapped_column(DateTime)
+    fecha_hora: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    motivo_consulta: Mapped[str] = mapped_column(String(255))
     estado: Mapped[str] = mapped_column(String(20), default="agendada")
     valor_consulta: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 2))
     diagnostico: Mapped[Optional[str]] = mapped_column(Text)
