@@ -3,6 +3,8 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field
 
+from app.schemas.propietario import PropietarioResumen
+
 
 class MascotaCreate(BaseModel):
     """
@@ -17,3 +19,16 @@ class MascotaCreate(BaseModel):
     raza: str | None = Field(default=None, max_length=50)
     fecha_nacimiento: date | None = None
     peso: Decimal | None = Field(default=None, ge=0)
+
+class FichaMascotaResponse(BaseModel):
+    """Ficha completa de mascota: datos identificativos + propietario en solo lectura (CU-17)."""
+    id_mascota: int
+    nombre: str
+    especie: str
+    raza: str | None = None
+    fecha_nacimiento: date | None = None
+    peso: Decimal | None = None
+    activo: bool
+    propietario: PropietarioResumen
+
+    model_config = {"from_attributes": True}
