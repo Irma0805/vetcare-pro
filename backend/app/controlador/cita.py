@@ -10,11 +10,15 @@ from sqlalchemy import Row
 from sqlalchemy.orm import Session
 
 from app.schemas.cita import CitaCreate
+from app.schemas.tratamiento import AsociarTratamientoCreate
 from app.models.cita import Cita
+from app.models.citas_tratamientos import CitasTratamientos
 from app.service.propietario import get_propietario_by_id, create_propietario
 from app.service.mascota import get_mascota_by_id, create_mascota
 from app.service.veterinario import get_veterinario_activo
-from app.service.cita import create_cita, contar_citas, get_citas_paginadas
+from app.service.cita import create_cita, contar_citas, get_citas_paginadas, get_cita_by_id
+from app.service.tratamiento import get_tratamiento_by_id
+from app.service.citas_tratamientos import create_cita_tratamiento
 from app.exceptions import (
     PropietarioNoEncontradoError,
     MascotaNoEncontradaError,
