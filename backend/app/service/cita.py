@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 from app.models.cita import Cita
 from app.models.mascota import Mascota
 from app.models.veterinario import Veterinario
+from app.models.cita import Cita, EstadoCita
 
 
 def create_cita(
@@ -40,7 +41,7 @@ def create_cita(
     nueva_cita = Cita(
         fecha_hora=fecha_hora,
         motivo_consulta=motivo_consulta,
-        estado="agendada",
+        estado=EstadoCita.AGENDADA.value,
         id_mascota=id_mascota,
         id_veterinario=id_veterinario,
     )
