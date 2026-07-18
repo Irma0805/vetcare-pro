@@ -5,18 +5,25 @@ crear_cita: FUS-03/CU-04. listar_citas: FUS-06/CU-07.
 """
 
 import math
+from datetime import datetime, timezone
 
 from sqlalchemy import Row
 from sqlalchemy.orm import Session
 
 from app.schemas.cita import CitaCreate
 from app.schemas.tratamiento import AsociarTratamientoCreate
-from app.models.cita import Cita
+from app.models.cita import Cita, EstadoCita
 from app.models.citas_tratamientos import CitasTratamientos
 from app.service.propietario import get_propietario_by_id, create_propietario
 from app.service.mascota import get_mascota_by_id, create_mascota
 from app.service.veterinario import get_veterinario_activo
-from app.service.cita import create_cita, contar_citas, get_citas_paginadas, get_cita_by_id
+from app.service.cita import (
+    create_cita,
+    contar_citas,
+    get_citas_paginadas,
+    get_cita_by_id,
+    cancelar_cita_bd,
+)
 from app.service.tratamiento import get_tratamiento_by_id
 from app.service.citas_tratamientos import create_cita_tratamiento
 from app.exceptions import (
@@ -25,6 +32,8 @@ from app.exceptions import (
     VeterinarioNoDisponibleError,
     CitaNoEncontradaError,
     TratamientoNoEncontradoError,
+    CitaYaRealizadaError,
+    CitaYaCanceladaError,
 )
 
 TAMANO_PAGINA = 10
@@ -136,3 +145,29 @@ def asociar_tratamiento(
     db.commit()
 
     return registro
+
+def cancelar_cita(db: Session, cita_id: int) -> Cita:
+    """
+    Orquesta CU-09: comprueba que la cita existe, que sigue en estado
+    "agendada" y que su fecha/hora es futura, y cambia su estado a
+    "cancelada".
+
+    La comparación de fecha usa datetime.now(timezone.utc), no hora
+    local: fecha_hora es DateTime(timezone=True), mismo criterio ya
+    aplicado con la expiración de JWT (PyJWT exige comparar en UTC).
+    """
+    cita = get_cita_by_id(db, cita_id)
+    if cita is None:
+        raise CitaNoEncontradaError()
+
+    if cita.estado == EstadoCita.CANCELADA.value:
+        raise CitaYaCanceladaError()
+
+    if cita.fecha_hora < datetime.now(timezone.utc):
+        raise CitaYaRealizadaError()
+
+    cita_cancelada = cancelar_cita_bd(db, cita)
+
+    db.commit()
+
+    return cita_cancelada

@@ -10,9 +10,9 @@ from datetime import datetime
 from sqlalchemy import select, func
 from sqlalchemy.orm import Session
 
-from app.models.cita import Cita
 from app.models.mascota import Mascota
 from app.models.veterinario import Veterinario
+from app.models.cita import Cita, EstadoCita
 
 
 def create_cita(
@@ -40,7 +40,7 @@ def create_cita(
     nueva_cita = Cita(
         fecha_hora=fecha_hora,
         motivo_consulta=motivo_consulta,
-        estado="agendada",
+        estado=EstadoCita.AGENDADA.value,
         id_mascota=id_mascota,
         id_veterinario=id_veterinario,
     )
@@ -90,3 +90,22 @@ def get_cita_by_id(db: Session, cita_id: int) -> Cita | None:
     (mismo patrón ya aplicado en get_mascota_by_id / get_propietario_by_id).
     """
     return db.get(Cita, cita_id)
+
+def cancelar_cita_bd(db: Session, cita: Cita) -> Cita:
+    """
+    Cambia el estado de una cita a "cancelada" (FUS-08/CU-09).
+
+    Recibe el objeto Cita ya cargado y validado por el controlador
+    (existe, está en estado agendada, fecha futura) — esta función
+    no valida nada, solo aplica el cambio de estado.
+
+    No requiere db.add(): cita ya está adjunto a la sesión (se cargó
+    con db.get() dentro de la misma sesión), así que SQLAlchemy
+    detecta la mutación del atributo automáticamente y genera el
+    UPDATE en el próximo flush/commit (verificado contra la
+    documentación oficial de SQLAlchemy 2.0, Session Basics). No hace
+    flush ni commit aquí: el controlador decide cuándo confirmar la
+    transacción (ADR-008).
+    """
+    cita.estado = EstadoCita.CANCELADA.value
+    return cita

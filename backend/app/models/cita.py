@@ -1,5 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
+from enum import StrEnum
 from typing import Optional
 
 from sqlalchemy import String, Numeric, DateTime, Text, ForeignKey
@@ -8,13 +9,27 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.database import Base
 
 
+class EstadoCita(StrEnum):
+    """
+    Valores válidos para Cita.estado (FUS-08/CU-09).
+
+    StrEnum, no PostgreSQL ENUM nativo: la columna sigue siendo
+    String(20) (ADR ya documentado, para evitar las limitaciones de
+    Alembic al modificar tipos ENUM). Este enum centraliza los
+    valores a nivel de código Python, evitando strings sueltos
+    repetidos ("agendada", "cancelada") por el proyecto.
+    """
+    AGENDADA = "agendada"
+    CANCELADA = "cancelada"
+
+
 class Cita(Base):
     __tablename__ = "citas"
 
     id_cita: Mapped[int] = mapped_column(primary_key=True)
     fecha_hora: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     motivo_consulta: Mapped[str] = mapped_column(String(255))
-    estado: Mapped[str] = mapped_column(String(20), default="agendada")
+    estado: Mapped[str] = mapped_column(String(20), default=EstadoCita.AGENDADA.value)
     valor_consulta: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 2))
     diagnostico: Mapped[Optional[str]] = mapped_column(Text)
     id_mascota: Mapped[int] = mapped_column(ForeignKey("mascotas.id_mascota"))
