@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing_extensions import Self
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, Field,model_validator
 
 from app.schemas.propietario import PropietarioCreate
 from app.schemas.mascota import MascotaCreate
@@ -61,6 +61,7 @@ class CitaResponse(BaseModel):
     fecha_hora: datetime
     motivo_consulta: str
     estado: str
+    diagnostico: str | None = None
     id_mascota: int
     id_veterinario: int
 
@@ -82,3 +83,7 @@ class CitaListItem(BaseModel):
     veterinario_apellidos: str
 
     model_config = {"from_attributes": True}
+
+class DiagnosticoUpdate(BaseModel):
+    """Payload para registrar/editar el diagnóstico de una cita (CU-05)."""
+    diagnostico: str = Field(min_length=1)
