@@ -109,3 +109,20 @@ def cancelar_cita_bd(db: Session, cita: Cita) -> Cita:
     """
     cita.estado = EstadoCita.CANCELADA.value
     return cita
+
+def registrar_diagnostico_bd(db: Session, cita: Cita, diagnostico: str) -> Cita:
+    """
+    Actualiza el campo diagnostico de una cita (FUS-04/CU-05).
+
+    Recibe el objeto Cita ya cargado y validado por el controlador
+    (existe, ya se ha realizado) — esta función no valida nada, solo
+    aplica el cambio de campo.
+
+    No requiere db.add(): cita ya está adjunto a la sesión (mismo
+    criterio ya verificado con cancelar_cita_bd, contra la
+    documentación oficial de SQLAlchemy 2.0). No hace flush ni
+    commit: el controlador decide cuándo confirmar la transacción
+    (ADR-008).
+    """
+    cita.diagnostico = diagnostico
+    return cita
