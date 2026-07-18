@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.controlador.cita import crear_cita as crear_cita_controlador
 from app.controlador.cita import listar_citas as listar_citas_controlador
 from app.controlador.cita import asociar_tratamiento as asociar_tratamiento_controlador
+from app.controlador.cita import cancelar_cita as cancelar_cita_controlador
 from app.database import get_db
 from app.schemas.cita import CitaCreate, CitaListItem, CitaResponse
 from app.schemas.tratamiento import AsociarTratamientoCreate, CitaTratamientoResponse
@@ -13,6 +14,8 @@ from app.exceptions import (
     VeterinarioNoDisponibleError,
     CitaNoEncontradaError,
     TratamientoNoEncontradoError,
+    CitaYaRealizadaError,
+    CitaYaCanceladaError,
 )
 
 router = APIRouter(tags=["Gestión de Citas"])
@@ -59,6 +62,7 @@ def listar_citas(
     """
     return listar_citas_controlador(db, pagina)
 
+
 @router.post(
     "/citas/{cita_id}/tratamientos",
     response_model=CitaTratamientoResponse,
@@ -83,4 +87,30 @@ def asociar_tratamiento(cita_id: int, datos: AsociarTratamientoCreate, db: Sessi
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="El tratamiento indicado no existe",
+        )
+    
+
+@router.post("/citas/{cita_id}/cancelar", response_model=CitaResponse)
+def cancelar_cita(cita_id: int, db: Session = Depends(get_db)):
+    """
+    Endpoint de cancelación de cita (FUS-08/CU-09).
+    Reutiliza CitaResponse (mismo schema que crear_cita) para
+    devolver la cita con su estado ya actualizado a "cancelada".
+    """
+    try:
+        return cancelar_cita_controlador(db, cita_id)
+    except CitaNoEncontradaError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="La cita indicada no existe",
+        )
+    except CitaYaCanceladaError:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="La cita ya está cancelada",
+        )
+    except CitaYaRealizadaError:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="La cita ya se ha realizado y no puede cancelarse",
         )
