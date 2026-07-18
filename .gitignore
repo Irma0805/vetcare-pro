@@ -216,7 +216,6 @@ http-client.private.env.json
 
 # Proyecto individual (no colaborativo en PyCharm) — ignorar también config de proyecto
 .idea/
-
 # Abstra
 #   Abstra is an AI-powered process automation framework.
 #   Ignore directories containing user credentials, local state, and settings.
