@@ -25,3 +25,10 @@ class VeterinarioNoDisponibleError(Exception):
     get_veterinario_activo() en service/: el Gherkin de CU-04 solo
     define un mensaje de rechazo, sin distinguir la causa.
     """
+
+class CitaNoEncontradaError(Exception):
+    """El cita_id indicado no corresponde a ninguna cita existente."""
+
+
+class TratamientoNoEncontradoError(Exception):
+    """El tratamiento_id indicado no corresponde a ningún tratamiento existente."""

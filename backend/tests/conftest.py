@@ -14,6 +14,7 @@ from app.models.mascota import Mascota
 from app.models.veterinario import Veterinario
 from app.validation.password import hash_password
 from app.models.cita import Cita
+from app.models.tratamiento import Tratamiento
 
 
 class TestSettings(BaseSettings):
@@ -202,3 +203,26 @@ def crear_cita():
         return cita
 
     return _crear_cita
+
+@pytest.fixture
+def crear_tratamiento():
+    """Factory fixture (mismo patrón que crear_usuario) para Tratamiento."""
+    def _crear_tratamiento(
+        db: Session,
+        nombre: str,
+        tipo_tratamiento: str,
+        descripcion: str,
+        tarifa_por_kg,
+    ) -> Tratamiento:
+        tratamiento = Tratamiento(
+            nombre=nombre,
+            tipo_tratamiento=tipo_tratamiento,
+            descripcion=descripcion,
+            tarifa_por_kg=tarifa_por_kg,
+        )
+        db.add(tratamiento)
+        db.flush()
+        db.refresh(tratamiento)
+        return tratamiento
+
+    return _crear_tratamiento

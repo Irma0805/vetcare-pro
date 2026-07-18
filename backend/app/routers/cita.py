@@ -3,12 +3,16 @@ from sqlalchemy.orm import Session
 
 from app.controlador.cita import crear_cita as crear_cita_controlador
 from app.controlador.cita import listar_citas as listar_citas_controlador
+from app.controlador.cita import asociar_tratamiento as asociar_tratamiento_controlador
 from app.database import get_db
 from app.schemas.cita import CitaCreate, CitaListItem, CitaResponse
+from app.schemas.tratamiento import AsociarTratamientoCreate, CitaTratamientoResponse
 from app.exceptions import (
     PropietarioNoEncontradoError,
     MascotaNoEncontradaError,
     VeterinarioNoDisponibleError,
+    CitaNoEncontradaError,
+    TratamientoNoEncontradoError,
 )
 
 router = APIRouter(tags=["Gestión de Citas"])
@@ -54,3 +58,29 @@ def listar_citas(
     nunca lanza HTTPException.
     """
     return listar_citas_controlador(db, pagina)
+
+@router.post(
+    "/citas/{cita_id}/tratamientos",
+    response_model=CitaTratamientoResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def asociar_tratamiento(cita_id: int, datos: AsociarTratamientoCreate, db: Session = Depends(get_db)):
+    """
+    Endpoint de asociación de tratamiento a cita (FUS-05/CU-06).
+    La validación de rango de fechas (fecha_fin >= fecha_inicio) ya
+    la resuelve AsociarTratamientoCreate a nivel de schema (422
+    automático de Pydantic); este endpoint solo traduce las
+    excepciones de dominio de existencia a HTTP.
+    """
+    try:
+        return asociar_tratamiento_controlador(db, cita_id, datos)
+    except CitaNoEncontradaError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="La cita indicada no existe",
+        )
+    except TratamientoNoEncontradoError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="El tratamiento indicado no existe",
+        )
