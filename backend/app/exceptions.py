@@ -39,3 +39,6 @@ class CitaYaRealizadaError(Exception):
 
 class CitaYaCanceladaError(Exception):
     """La cita indicada ya está en estado 'cancelada'."""
+
+class CitaNoRealizadaAunError(Exception):
+    """La cita indicada aún no se ha realizado; no puede registrarse diagnóstico."""
