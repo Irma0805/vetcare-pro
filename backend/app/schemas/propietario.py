@@ -42,3 +42,11 @@ class FichaClienteResponse(BaseModel):
     mascotas: list[MascotaResumen]
 
     model_config = {"from_attributes": True}
+
+class PropietarioResumen(BaseModel):
+    """Propietario resumido dentro de la ficha de mascota (CU-17)."""
+    id_propietario: int
+    nombre: str
+    apellidos: str
+
+    model_config = {"from_attributes": True}
