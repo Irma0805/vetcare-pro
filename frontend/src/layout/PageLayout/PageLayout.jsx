@@ -19,6 +19,9 @@ function PageLayout() {
               <Nav.Link as={NavLink} to="/veterinarios">
                 Veterinarios
               </Nav.Link>
+              <Nav.Link as={NavLink} to="/citas">
+                Citas
+              </Nav.Link>
             </Nav>
           </Navbar.Collapse>
         </Container>
