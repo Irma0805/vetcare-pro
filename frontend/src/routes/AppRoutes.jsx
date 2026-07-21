@@ -1,13 +1,18 @@
 import { Routes, Route, Navigate } from 'react-router'
 import LoginPage from '../pages/LoginPage/LoginPage.jsx'
 import DashboardPage from '../pages/DashboardPage/DashboardPage.jsx'
+import VeterinariosPage from '../pages/VeterinariosPage/VeterinariosPage.jsx'
+import PageLayout from '../layout/PageLayout/PageLayout.jsx'
 
 function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/dashboard" element={<DashboardPage />} />
+      <Route element={<PageLayout />}>
+        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/veterinarios" element={<VeterinariosPage />} />
+      </Route>
     </Routes>
   )
 }
