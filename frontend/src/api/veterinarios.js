@@ -6,3 +6,8 @@ export async function getVeterinarios(pagina = 1) {
   });
   return response.data;
 }
+
+export async function createVeterinario(datos) {
+  const response = await axiosClient.post('/veterinarios', datos);
+  return response.data;
+}

@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react'
 import { Table, Spinner, Alert, Button } from 'react-bootstrap'
-import { getVeterinarios } from '../../api/veterinarios'
+import { getVeterinarios, createVeterinario } from '../../api/veterinarios'
+import CrearVeterinarioModal from '../../components/organisms/CrearVeterinarioModal/CrearVeterinarioModal'
 
 const TAMANO_PAGINA = 10
 
 function VeterinariosPage() {
   const [veterinarios, setVeterinarios] = useState([])
   const [pagina, setPagina] = useState(1)
+  const [reloadToken, setReloadToken] = useState(0)
   const [loading, setLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState('')
+  const [showModal, setShowModal] = useState(false)
 
   useEffect(() => {
     let ignore = false
@@ -39,13 +42,24 @@ function VeterinariosPage() {
     return () => {
       ignore = true
     }
-  }, [pagina])
+  }, [pagina, reloadToken])
+
+  const handleCrear = async (datos) => {
+    await createVeterinario(datos)
+    setPagina(1)
+    setReloadToken((t) => t + 1)
+  }
 
   const hayPaginaSiguiente = veterinarios.length === TAMANO_PAGINA
 
   return (
     <>
-      <h1>Veterinarios</h1>
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h1>Veterinarios</h1>
+        <Button variant="primary" onClick={() => setShowModal(true)}>
+          Nuevo veterinario
+        </Button>
+      </div>
 
       {errorMessage && <Alert variant="danger">{errorMessage}</Alert>}
 
@@ -92,6 +106,12 @@ function VeterinariosPage() {
           Siguiente
         </Button>
       </div>
+
+      <CrearVeterinarioModal
+        show={showModal}
+        onHide={() => setShowModal(false)}
+        onCrear={handleCrear}
+      />
     </>
   )
 }
