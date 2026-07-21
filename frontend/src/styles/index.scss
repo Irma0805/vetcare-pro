@@ -1,0 +1,21 @@
+@import "../../node_modules/bootstrap/scss/functions";
+
+
+
+$primary: #00647c;        
+$body-bg: #f8f9fa;        
+$body-color: #191c1d;     
+$secondary: #3e484d;      
+$border-color: #dee2e6;   
+$danger: #dc3545;         
+
+$font-family-sans-serif: "Inter", sans-serif;
+
+
+@import "../../node_modules/bootstrap/scss/variables";
+@import "../../node_modules/bootstrap/scss/variables-dark";
+@import "../../node_modules/bootstrap/scss/maps";
+@import "../../node_modules/bootstrap/scss/mixins";
+@import "../../node_modules/bootstrap/scss/root";
+
+@import "../../node_modules/bootstrap/scss/bootstrap";
