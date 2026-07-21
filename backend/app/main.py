@@ -7,6 +7,7 @@ app = FastAPI(title="VetCare Pro API")
 
 origins = [
     "http://localhost:5173",
+    "http://localhost:5174",
 ]
 
 app.add_middleware(
