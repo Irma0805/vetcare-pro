@@ -5,9 +5,10 @@ Orquestación de negocio para Propietario (ADR-003).
 from sqlalchemy.orm import Session
 
 from app.schemas.propietario import FichaClienteResponse, MascotaResumen
-from app.service.propietario import get_propietario_by_id
+from app.service.propietario import get_propietario_by_id, get_propietario_by_dni
 from app.service.mascota import get_mascotas_por_propietario
 from app.exceptions import PropietarioNoEncontradoError
+from app.models.propietario import Propietario
 
 
 def obtener_ficha_cliente(db: Session, propietario_id: int) -> FichaClienteResponse:
@@ -37,3 +38,19 @@ def obtener_ficha_cliente(db: Session, propietario_id: int) -> FichaClienteRespo
         email=propietario.email,
         mascotas=[MascotaResumen.model_validate(m) for m in mascotas],
     )
+
+
+def buscar_propietario_por_dni(db: Session, dni: str) -> Propietario | None:
+    """
+    Orquestación de la búsqueda de propietario por DNI (FUS-03/CU-04).
+
+    Passthrough directo al service: no hay lógica de negocio que
+    aplicar aquí, pero se mantiene la capa de controlador por
+    consistencia arquitectónica (todos los endpoints pasan por
+    controlador, sin excepciones caso por caso).
+
+    Devuelve None si no existe; no es un error de negocio, así que el
+    router no debe traducirlo a una excepción HTTP — es un resultado
+    válido de búsqueda (candidato a "cliente nuevo").
+    """
+    return get_propietario_by_dni(db, dni)

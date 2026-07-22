@@ -7,6 +7,7 @@ ciclo de vida de la transacción (add/flush/commit): esa responsabilidad
 vive en controlador/, que decide cuándo confirmar los cambios.
 """
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.propietario import Propietario
@@ -41,3 +42,21 @@ def create_propietario(db: Session, datos: PropietarioCreate) -> Propietario:
     )
     db.add(nuevo_propietario)
     return nuevo_propietario
+
+
+def get_propietario_by_dni(db: Session, dni: str) -> Propietario | None:
+    """
+    Busca un propietario existente por coincidencia exacta de DNI.
+
+    Devuelve None si no hay ningún propietario con ese DNI; no es un
+    error de negocio (es el caso esperado para un cliente nuevo), así
+    que el controlador no debe traducir esta ausencia a una excepción.
+
+    No filtra por `activo`: un propietario dado de baja debe seguir
+    siendo encontrado por su DNI (igual que Mascota en FUS-18), para
+    que el flujo de Crear Cita pueda avisar de que está inactivo en
+    vez de tratarlo como si no existiera y arriesgar un DNI duplicado.
+    """
+    return db.execute(
+        select(Propietario).where(Propietario.dni == dni)
+    ).scalar_one_or_none()
