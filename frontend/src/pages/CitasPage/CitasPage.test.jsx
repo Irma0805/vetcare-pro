@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react'
+import { MemoryRouter } from 'react-router'
 import { getCitas } from '../../api/citas'
 import CitasPage from './CitasPage'
 
@@ -10,7 +11,11 @@ describe('CitasPage', () => {
   it('muestra un indicador de carga mientras se obtienen los datos', () => {
     getCitas.mockReturnValue(new Promise(() => {}))
 
-    render(<CitasPage />)
+    render(
+      <MemoryRouter>
+        <CitasPage />
+      </MemoryRouter>
+    )
 
     expect(screen.getByRole('status')).toBeInTheDocument()
   })
@@ -27,7 +32,11 @@ describe('CitasPage', () => {
       },
     ])
 
-    render(<CitasPage />)
+    render(
+      <MemoryRouter>
+        <CitasPage />
+      </MemoryRouter>
+    )
 
     expect(await screen.findByText('Toby')).toBeInTheDocument()
     expect(screen.getByText('Laura Fernández Ruiz')).toBeInTheDocument()
@@ -39,7 +48,11 @@ describe('CitasPage', () => {
       response: { data: { detail: 'No autorizado' } },
     })
 
-    render(<CitasPage />)
+    render(
+      <MemoryRouter>
+        <CitasPage />
+      </MemoryRouter>
+    )
 
     expect(await screen.findByText('No autorizado')).toBeInTheDocument()
   })

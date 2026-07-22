@@ -3,7 +3,9 @@ import LoginPage from '../pages/LoginPage/LoginPage.jsx'
 import DashboardPage from '../pages/DashboardPage/DashboardPage.jsx'
 import VeterinariosPage from '../pages/VeterinariosPage/VeterinariosPage.jsx'
 import CitasPage from '../pages/CitasPage/CitasPage.jsx'
+import CrearCitaPage from '../pages/CrearCitaPage/CrearCitaPage.jsx'
 import PageLayout from '../layout/PageLayout/PageLayout.jsx'
+
 
 function AppRoutes() {
   return (
@@ -14,6 +16,7 @@ function AppRoutes() {
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/veterinarios" element={<VeterinariosPage />} />
         <Route path="/citas" element={<CitasPage />} />
+        <Route path="/citas/nueva" element={<CrearCitaPage />} />
       </Route>
     </Routes>
   )
