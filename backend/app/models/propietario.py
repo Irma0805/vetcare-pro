@@ -10,7 +10,7 @@ class Propietario(Base):
     __tablename__ = "propietarios"
 
     id_propietario: Mapped[int] = mapped_column(primary_key=True)
-    dni: Mapped[str] = mapped_column(String(20))
+    dni: Mapped[str] = mapped_column(String(20), unique=True)
     nombre: Mapped[str] = mapped_column(String(100))
     apellidos: Mapped[str] = mapped_column(String(150))
     direccion: Mapped[Optional[str]] = mapped_column(String(200))
