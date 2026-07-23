@@ -6,3 +6,8 @@ export async function getCitas(pagina = 1) {
   });
   return response.data;
 }
+
+export async function crearCita(datos) {
+  const response = await axiosClient.post('/citas', datos);
+  return response.data;
+}

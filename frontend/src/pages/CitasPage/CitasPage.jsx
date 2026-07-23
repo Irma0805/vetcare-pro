@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router'
 import { Table, Spinner, Alert, Button, Badge } from 'react-bootstrap'
 import { getCitas } from '../../api/citas'
 
@@ -58,7 +59,12 @@ function CitasPage() {
 
   return (
     <>
-      <h1>Citas</h1>
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h1>Citas</h1>
+        <Button as={Link} to="/citas/nueva" variant="primary">
+          Nueva cita
+        </Button>
+      </div>
 
       {errorMessage && <Alert variant="danger">{errorMessage}</Alert>}
 
