@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router'
 import { getVeterinarios } from '../../api/veterinarios'
 import { buscarPropietarioPorDni, obtenerFichaCliente } from '../../api/propietarios'
 import { crearCita } from '../../api/citas'
@@ -32,6 +33,14 @@ const veterinariosMock = [
   { id_veterinario: 1, nombre: 'Laura', apellidos: 'Fernández Ruiz' },
 ]
 
+function renderConRouter() {
+  return render(
+    <MemoryRouter>
+      <CrearCitaPage />
+    </MemoryRouter>
+  )
+}
+
 describe('CrearCitaPage', () => {
     beforeEach(() => {
     vi.clearAllMocks()
@@ -42,7 +51,7 @@ describe('CrearCitaPage', () => {
     const user = userEvent.setup()
     buscarPropietarioPorDni.mockResolvedValue(null)
 
-    render(<CrearCitaPage />)
+    renderConRouter()
 
     await user.type(screen.getByPlaceholderText('12345678Z'), '00000000A')
     await user.click(screen.getByRole('button', { name: 'Buscar' }))
@@ -60,7 +69,7 @@ describe('CrearCitaPage', () => {
       mascotas: [{ id_mascota: 5, nombre: 'Toby', especie: 'Perro' }],
     })
 
-    render(<CrearCitaPage />)
+    renderConRouter()
 
     await user.type(screen.getByPlaceholderText('12345678Z'), '12345678Z')
     await user.click(screen.getByRole('button', { name: 'Buscar' }))
@@ -76,7 +85,7 @@ describe('CrearCitaPage', () => {
     id_propietario: 2, dni: '87654321X', nombre: 'Luis', apellidos: 'Pérez Sanz', activo: false,
   })
 
-  render(<CrearCitaPage />)
+  renderConRouter()
 
   await user.type(screen.getByPlaceholderText('12345678Z'), '87654321X')
   await user.click(screen.getByRole('button', { name: 'Buscar' }))
@@ -95,7 +104,7 @@ describe('CrearCitaPage', () => {
     })
     crearCita.mockResolvedValue({ id_cita: 99 })
 
-    render(<CrearCitaPage />)
+    renderConRouter()
 
     await user.type(screen.getByPlaceholderText('12345678Z'), '12345678Z')
     await user.click(screen.getByRole('button', { name: 'Buscar' }))
@@ -132,7 +141,7 @@ describe('CrearCitaPage', () => {
       response: { data: { detail: 'El veterinario no está disponible' } },
     })
 
-    render(<CrearCitaPage />)
+    renderConRouter()
 
     await user.type(screen.getByPlaceholderText('12345678Z'), '12345678Z')
     await user.click(screen.getByRole('button', { name: 'Buscar' }))

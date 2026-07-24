@@ -1,11 +1,12 @@
 import { useState } from 'react';
+import { Link } from 'react-router';
 import { Form, Button, Alert, ListGroup, Spinner } from 'react-bootstrap';
 
 
 function PropietarioYMascotaForm({
-  resultadoBusqueda,      
+  resultadoBusqueda,
   buscando,
-  mascotasDelPropietario, 
+  mascotasDelPropietario,
   modoMascota,
   onModoMascotaChange,
   onBuscarDni,
@@ -13,7 +14,7 @@ function PropietarioYMascotaForm({
   onMascotaSeleccionada,
   onMascotaNuevaChange,
 }) {
-  const [dniInput, setDniInput] = useState(''); 
+  const [dniInput, setDniInput] = useState('');
 
   const handleBuscarClick = () => {
     if (dniInput.trim()) {
@@ -144,8 +145,17 @@ function PropietarioYMascotaForm({
   const renderResultado = () => {
     if (resultadoBusqueda === undefined) return null;
     if (resultadoBusqueda === null) return renderPropietarioNuevoYMascotaNueva();
-    if (!resultadoBusqueda.activo) return renderPropietarioInactivo();
-    return renderPropietarioActivo();
+
+    return (
+      <>
+        <div className="mb-2">
+          <Link to={`/clientes/${resultadoBusqueda.id_propietario}`}>
+            Ver ficha completa
+          </Link>
+        </div>
+        {resultadoBusqueda.activo ? renderPropietarioActivo() : renderPropietarioInactivo()}
+      </>
+    );
   };
 
   return (
