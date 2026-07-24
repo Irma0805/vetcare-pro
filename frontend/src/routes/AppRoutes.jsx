@@ -4,6 +4,7 @@ import DashboardPage from '../pages/DashboardPage/DashboardPage.jsx'
 import VeterinariosPage from '../pages/VeterinariosPage/VeterinariosPage.jsx'
 import CitasPage from '../pages/CitasPage/CitasPage.jsx'
 import CrearCitaPage from '../pages/CrearCitaPage/CrearCitaPage.jsx'
+import FichaClientePage from '../pages/FichaClientePage/FichaClientePage.jsx'
 import PageLayout from '../layout/PageLayout/PageLayout.jsx'
 
 
@@ -17,6 +18,7 @@ function AppRoutes() {
         <Route path="/veterinarios" element={<VeterinariosPage />} />
         <Route path="/citas" element={<CitasPage />} />
         <Route path="/citas/nueva" element={<CrearCitaPage />} />
+        <Route path="/clientes/:id" element={<FichaClientePage />} />
       </Route>
     </Routes>
   )
