@@ -156,3 +156,36 @@ describe('CrearCitaPage', () => {
     expect(mockedUsedNavigate).not.toHaveBeenCalled()
   })
 })
+
+it('muestra un mensaje legible si la creación de la cita falla con una lista de errores de validación', async () => {
+    const user = userEvent.setup()
+    buscarPropietarioPorDni.mockResolvedValue({
+      id_propietario: 1, dni: '12345678Z', nombre: 'Ana', apellidos: 'García', activo: true,
+    })
+    obtenerFichaCliente.mockResolvedValue({
+      mascotas: [{ id_mascota: 5, nombre: 'Toby', especie: 'Perro' }],
+    })
+    crearCita.mockRejectedValue({
+      response: {
+        data: {
+          detail: [
+            { type: 'missing', loc: ['body', 'motivo_consulta'], msg: 'Field required' },
+          ],
+        },
+      },
+    })
+
+    renderConRouter()
+
+    await user.type(screen.getByPlaceholderText('12345678Z'), '12345678Z')
+    await user.click(screen.getByRole('button', { name: 'Buscar' }))
+    await user.click(await screen.findByText('Toby (Perro)'))
+    await user.selectOptions(screen.getByLabelText('Veterinario'), '1')
+    await user.type(screen.getByLabelText('Fecha y hora'), '2026-08-01T10:00')
+    await user.type(screen.getByLabelText('Motivo de la consulta'), 'Revisión anual')
+
+    await user.click(screen.getByRole('button', { name: 'Crear cita' }))
+
+    expect(await screen.findByText('Field required')).toBeInTheDocument()
+    expect(mockedUsedNavigate).not.toHaveBeenCalled()
+  })

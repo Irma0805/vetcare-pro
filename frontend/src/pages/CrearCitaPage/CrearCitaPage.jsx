@@ -8,6 +8,15 @@ import PropietarioYMascotaForm from '../../components/organisms/PropietarioYMasc
 
 const PAGINA_INICIAL = 1
 
+function extraerMensajeError(error, mensajePorDefecto) {
+  const detail = error.response?.data?.detail
+  if (typeof detail === 'string') return detail
+  if (Array.isArray(detail)) {
+    return detail.map((item) => item.msg).join(' ')
+  }
+  return mensajePorDefecto
+}
+
 function CrearCitaPage() {
   const navigate = useNavigate()
 
@@ -69,7 +78,7 @@ function CrearCitaPage() {
       }
     } catch (error) {
       setErrorMessage(
-        error.response?.data?.detail || 'No se pudo buscar el cliente. Inténtalo de nuevo.'
+          extraerMensajeError(error, 'No se pudo buscar el cliente. Inténtalo de nuevo.')
       )
     } finally {
       setBuscando(false)
@@ -137,7 +146,7 @@ function CrearCitaPage() {
       navigate('/citas')
     } catch (error) {
       setErrorMessage(
-        error.response?.data?.detail || 'No se pudo crear la cita. Inténtalo de nuevo.'
+        extraerMensajeError(error, 'No se pudo crear la cita. Inténtalo de nuevo.')
       )
     } finally {
       setLoading(false)
