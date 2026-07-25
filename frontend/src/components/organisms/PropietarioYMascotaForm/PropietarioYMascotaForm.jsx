@@ -51,6 +51,19 @@ function PropietarioYMascotaForm({
             onChange={(e) => onPropietarioNuevoChange({ campo: 'telefono', valor: e.target.value })}
           />
         </Form.Group>
+        <Form.Group className="mb-2">
+          <Form.Label>Email</Form.Label>
+          <Form.Control
+            type="email"
+            onChange={(e) => onPropietarioNuevoChange({ campo: 'email', valor: e.target.value })}
+          />
+        </Form.Group>
+        <Form.Group className="mb-2">
+          <Form.Label>Dirección</Form.Label>
+          <Form.Control
+            onChange={(e) => onPropietarioNuevoChange({ campo: 'direccion', valor: e.target.value })}
+          />
+        </Form.Group>
       </fieldset>
       <fieldset className="mb-3">
         <legend className="h6">Datos de la mascota nueva</legend>
