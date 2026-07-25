@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router'
-import { Table, Spinner, Alert, Button, Badge, Dropdown, Modal } from 'react-bootstrap'
-import { getCitas, cancelarCita } from '../../api/citas'
+import { Table, Spinner, Alert, Button, Badge, Dropdown, Modal, Form } from 'react-bootstrap'
+import { getCitas, cancelarCita, registrarDiagnostico } from '../../api/citas'
 
 const TAMANO_PAGINA = 10
 
@@ -18,6 +18,10 @@ function formatearFechaHora(fechaISO) {
   })
 }
 
+function esCitaPasada(fechaISO) {
+  return new Date(fechaISO) < new Date()
+}
+
 function CitasPage() {
   const [citas, setCitas] = useState([])
   const [pagina, setPagina] = useState(1)
@@ -28,6 +32,10 @@ function CitasPage() {
   const [cancelando, setCancelando] = useState(false)
   const [errorCancelar, setErrorCancelar] = useState('')
 
+  const [citaADiagnosticar, setCitaADiagnosticar] = useState(null)
+  const [diagnosticoTexto, setDiagnosticoTexto] = useState('')
+  const [guardandoDiagnostico, setGuardandoDiagnostico] = useState(false)
+  const [errorDiagnostico, setErrorDiagnostico] = useState('')
 
   useEffect(() => {
     let ignore = false
@@ -60,8 +68,7 @@ function CitasPage() {
     }
   }, [pagina])
 
-  
-  async function recargarCitasTrasCancelar() {
+  async function recargarCitas() {
     setLoading(true)
     setErrorMessage('')
     try {
@@ -94,13 +101,41 @@ function CitasPage() {
     try {
       await cancelarCita(citaACancelar.id_cita)
       setCitaACancelar(null)
-      await recargarCitasTrasCancelar()
+      await recargarCitas()
     } catch (error) {
       setErrorCancelar(
         error.response?.data?.detail || 'No se pudo cancelar la cita.'
       )
     } finally {
       setCancelando(false)
+    }
+  }
+
+  function handleAbrirModalDiagnostico(cita) {
+    setErrorDiagnostico('')
+    setDiagnosticoTexto('')
+    setCitaADiagnosticar(cita)
+  }
+
+  function handleCerrarModalDiagnostico() {
+    setCitaADiagnosticar(null)
+    setDiagnosticoTexto('')
+    setErrorDiagnostico('')
+  }
+
+  async function handleGuardarDiagnostico() {
+    setGuardandoDiagnostico(true)
+    setErrorDiagnostico('')
+    try {
+      await registrarDiagnostico(citaADiagnosticar.id_cita, diagnosticoTexto)
+      handleCerrarModalDiagnostico()
+      await recargarCitas()
+    } catch (error) {
+      setErrorDiagnostico(
+        error.response?.data?.detail || 'No se pudo registrar el diagnóstico.'
+      )
+    } finally {
+      setGuardandoDiagnostico(false)
     }
   }
 
@@ -133,32 +168,46 @@ function CitasPage() {
             </tr>
           </thead>
           <tbody>
-            {citas.map((cita) => (
-              <tr key={cita.id_cita}>
-                <td>{formatearFechaHora(cita.fecha_hora)}</td>
-                <td>{cita.mascota_nombre}</td>
-                <td>{cita.veterinario_nombre} {cita.veterinario_apellidos}</td>
-                <td>
-                  <Badge bg={VARIANTE_POR_ESTADO[cita.estado] || 'dark'}>
-                    {cita.estado}
-                  </Badge>
-                </td>
-                <td>
-                  {cita.estado === 'agendada' && (
-                    <Dropdown>
-                      <Dropdown.Toggle variant="outline-secondary" size="sm">
-                        Acciones
-                      </Dropdown.Toggle>
-                      <Dropdown.Menu>
-                        <Dropdown.Item onClick={() => handleAbrirModalCancelar(cita)}>
-                          Cancelar cita
-                        </Dropdown.Item>
-                      </Dropdown.Menu>
-                    </Dropdown>
-                  )}
-                </td>
-              </tr>
-            ))}
+            {citas.map((cita) => {
+              const esAgendada = cita.estado === 'agendada'
+              const esPasada = esCitaPasada(cita.fecha_hora)
+              const puedeCancelar = esAgendada && !esPasada
+              const puedeDiagnosticar = esAgendada && esPasada
+
+              return (
+                <tr key={cita.id_cita}>
+                  <td>{formatearFechaHora(cita.fecha_hora)}</td>
+                  <td>{cita.mascota_nombre}</td>
+                  <td>{cita.veterinario_nombre} {cita.veterinario_apellidos}</td>
+                  <td>
+                    <Badge bg={VARIANTE_POR_ESTADO[cita.estado] || 'dark'}>
+                      {cita.estado}
+                    </Badge>
+                  </td>
+                  <td>
+                    {(puedeCancelar || puedeDiagnosticar) && (
+                      <Dropdown>
+                        <Dropdown.Toggle variant="outline-secondary" size="sm">
+                          Acciones
+                        </Dropdown.Toggle>
+                        <Dropdown.Menu>
+                          {puedeCancelar && (
+                            <Dropdown.Item onClick={() => handleAbrirModalCancelar(cita)}>
+                              Cancelar cita
+                            </Dropdown.Item>
+                          )}
+                          {puedeDiagnosticar && (
+                            <Dropdown.Item onClick={() => handleAbrirModalDiagnostico(cita)}>
+                              Registrar diagnóstico
+                            </Dropdown.Item>
+                          )}
+                        </Dropdown.Menu>
+                      </Dropdown>
+                    )}
+                  </td>
+                </tr>
+              )
+            })}
           </tbody>
         </Table>
       )}
@@ -200,6 +249,42 @@ function CitasPage() {
           </Button>
           <Button variant="danger" onClick={handleConfirmarCancelar} disabled={cancelando}>
             {cancelando ? 'Cancelando...' : 'Sí, cancelar cita'}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      <Modal show={citaADiagnosticar !== null} onHide={handleCerrarModalDiagnostico}>
+        <Modal.Header closeButton>
+          <Modal.Title>Registrar diagnóstico</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {errorDiagnostico && <Alert variant="danger">{errorDiagnostico}</Alert>}
+          {citaADiagnosticar && (
+            <p>
+              Cita del {formatearFechaHora(citaADiagnosticar.fecha_hora)} con{' '}
+              {citaADiagnosticar.mascota_nombre}.
+            </p>
+          )}
+          <Form.Group controlId="diagnosticoTexto">
+            <Form.Label>Diagnóstico</Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={4}
+              value={diagnosticoTexto}
+              onChange={(e) => setDiagnosticoTexto(e.target.value)}
+            />
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleCerrarModalDiagnostico} disabled={guardandoDiagnostico}>
+            Cancelar
+          </Button>
+          <Button
+            variant="primary"
+            onClick={handleGuardarDiagnostico}
+            disabled={guardandoDiagnostico || diagnosticoTexto.trim().length === 0}
+          >
+            {guardandoDiagnostico ? 'Guardando...' : 'Guardar diagnóstico'}
           </Button>
         </Modal.Footer>
       </Modal>

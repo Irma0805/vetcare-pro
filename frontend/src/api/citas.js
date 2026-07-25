@@ -16,3 +16,10 @@ export async function cancelarCita(idCita) {
   const response = await axiosClient.post(`/citas/${idCita}/cancelar`);
   return response.data;
 }
+
+export async function registrarDiagnostico(idCita, diagnostico) {
+  const response = await axiosClient.patch(`/citas/${idCita}/diagnostico`, {
+    diagnostico,
+  });
+  return response.data;
+}
