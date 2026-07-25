@@ -6,6 +6,7 @@ Un test por escenario Gherkin.
 from datetime import datetime, timezone
 
 from fastapi.testclient import TestClient
+from freezegun import freeze_time
 from sqlalchemy.orm import Session
 
 
@@ -29,11 +30,20 @@ def test_registrar_diagnostico_en_cita_ya_realizada(
     assert response.json()["diagnostico"] == "Otitis leve en oído derecho, se pauta tratamiento tópico"
 
 
+@freeze_time("2026-07-15")
 def test_registrar_diagnostico_en_cita_futura(
     client: TestClient, db: Session,
     crear_propietario, crear_mascota, crear_veterinario, crear_cita,
 ):
-    """Escenario: Intento de registrar diagnóstico en una cita futura."""
+    """
+    Escenario: Intento de registrar diagnóstico en una cita futura.
+
+    Congelado con @freeze_time: la fecha de la cita (2026-07-20) debe
+    permanecer futura respecto al "ahora" del test, con independencia
+    de cuándo se ejecute realmente la suite. Sin esto, el test queda
+    "caducado" en cuanto el calendario real alcanza esa fecha —
+    exactamente lo que provocó el fallo detectado el 25 de julio.
+    """
     propietario = crear_propietario(db, dni="87654321X", nombre="Carlos", apellidos="Pérez")
     mascota = crear_mascota(db, nombre="Luna", especie="Gata", id_propietario=propietario.id_propietario)
     veterinario = crear_veterinario(db, nombre="Laura", apellidos="Fernández")
