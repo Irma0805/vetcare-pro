@@ -119,10 +119,12 @@ def crear_propietario():
         direccion: str | None = None,
         telefono: str | None = None,
         email: str | None = None,
+        activo: bool = True,
     ) -> Propietario:
         propietario = Propietario(
             dni=dni, nombre=nombre, apellidos=apellidos,
             direccion=direccion, telefono=telefono, email=email,
+            activo=activo,
         )
         db.add(propietario)
         db.flush()

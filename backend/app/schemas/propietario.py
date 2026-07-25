@@ -21,6 +21,7 @@ class PropietarioCreate(BaseModel):
     def validar_dni(cls, valor: str) -> str:
         return validate_document(valor)
 
+
 class MascotaResumen(BaseModel):
     """Mascota resumida dentro de la ficha de cliente (CU-14)."""
     id_mascota: int
@@ -43,10 +44,34 @@ class FichaClienteResponse(BaseModel):
 
     model_config = {"from_attributes": True}
 
+
 class PropietarioResumen(BaseModel):
     """Propietario resumido dentro de la ficha de mascota (CU-17)."""
     id_propietario: int
     nombre: str
     apellidos: str
+
+    model_config = {"from_attributes": True}
+
+
+class PropietarioBusqueda(BaseModel):
+    """
+    Respuesta mínima de la búsqueda de propietario por DNI (FUS-03/CU-04).
+
+    Deliberadamente no incluye datos de contacto completos ni mascotas
+    (eso ya lo cubre FichaClienteResponse vía GET /propietarios/{id}):
+    este schema solo da lo necesario para que el frontend confirme
+    "¿es esta persona?" antes de pedir la ficha completa.
+
+    Incluye `activo` a diferencia de PropietarioResumen: el frontend
+    necesita saber si el propietario encontrado está dado de baja,
+    para avisar en vez de tratarlo como seleccionable (mismo criterio
+    ya aplicado a Mascota en FUS-18).
+    """
+    id_propietario: int
+    dni: str
+    nombre: str
+    apellidos: str
+    activo: bool
 
     model_config = {"from_attributes": True}

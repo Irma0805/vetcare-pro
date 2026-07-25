@@ -5,14 +5,29 @@ from typing import Optional, Self
 from pydantic import BaseModel, Field, model_validator
 
 
+class TratamientoResponse(BaseModel):
+    """
+    Elemento del catálogo de tratamientos, devuelto por GET /tratamientos
+    (FUS-05/CU-06). Alimenta el selector de tratamientos del formulario
+    de asociación — expone los datos necesarios para que la persona
+    identifique el tratamiento correcto sin depender de pgAdmin.
+    """
+    id_tratamiento: int
+    nombre: str
+    tipo_tratamiento: str
+    descripcion: str
+    tarifa_por_kg: Decimal
+
+    model_config = {"from_attributes": True}
+
+
 class AsociarTratamientoCreate(BaseModel):
     """
     Payload para asociar un tratamiento a una cita (CU-06).
 
-    No incluye id_cita ni id_tratamiento como parte del body: el
-    tratamiento se selecciona vía path (id_tratamiento) o se decide
-    a nivel de router; aquí solo van los datos propios del registro
-    en Citas_Tratamientos.
+    id_tratamiento va dentro del body, no del path: solo cita_id se
+    recibe vía path (POST /citas/{cita_id}/tratamientos). El resto
+    de campos son los propios del registro en Citas_Tratamientos.
     """
     id_tratamiento: int
     fecha_inicio: date

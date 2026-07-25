@@ -12,9 +12,11 @@ tiene test aquí.
 from datetime import datetime, timezone
 
 from fastapi.testclient import TestClient
+from freezegun import freeze_time
 from sqlalchemy.orm import Session
 
 
+@freeze_time("2026-07-15")
 def test_cancelar_cita_futura_en_estado_agendada(
     client: TestClient, db: Session,
     crear_propietario, crear_mascota, crear_veterinario, crear_cita,
@@ -23,6 +25,11 @@ def test_cancelar_cita_futura_en_estado_agendada(
     Escenario: Cancelar correctamente una cita futura en estado agendada.
     Verifica también que la cita sigue visible en el listado con su
     nuevo estado (segunda aserción del Gherkin), no se elimina.
+
+    Congelado con @freeze_time: la fecha de la cita (2026-07-20) debe
+    permanecer futura respecto al "ahora" del test, con independencia
+    de cuándo se ejecute realmente la suite (mismo criterio aplicado
+    en test_registrar_diagnostico_en_cita_futura).
     """
     propietario = crear_propietario(db, dni="12345678Z", nombre="María", apellidos="López")
     mascota = crear_mascota(db, nombre="Toby", especie="Perro", id_propietario=propietario.id_propietario)
