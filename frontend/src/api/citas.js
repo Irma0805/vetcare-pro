@@ -23,3 +23,8 @@ export async function registrarDiagnostico(idCita, diagnostico) {
   });
   return response.data;
 }
+
+export async function asociarTratamiento(idCita, datos) {
+  const response = await axiosClient.post(`/citas/${idCita}/tratamientos`, datos);
+  return response.data;
+}
