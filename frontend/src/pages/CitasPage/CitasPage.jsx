@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router'
-import { Table, Spinner, Alert, Button, Badge } from 'react-bootstrap'
-import { getCitas } from '../../api/citas'
+import { Table, Spinner, Alert, Button, Badge, Dropdown, Modal } from 'react-bootstrap'
+import { getCitas, cancelarCita } from '../../api/citas'
 
 const TAMANO_PAGINA = 10
 
@@ -24,10 +24,15 @@ function CitasPage() {
   const [loading, setLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState('')
 
+  const [citaACancelar, setCitaACancelar] = useState(null)
+  const [cancelando, setCancelando] = useState(false)
+  const [errorCancelar, setErrorCancelar] = useState('')
+
+
   useEffect(() => {
     let ignore = false
 
-    async function cargarCitas() {
+    async function cargarCitasEfecto() {
       setLoading(true)
       setErrorMessage('')
       try {
@@ -48,14 +53,56 @@ function CitasPage() {
       }
     }
 
-    cargarCitas()
+    cargarCitasEfecto()
 
     return () => {
       ignore = true
     }
   }, [pagina])
 
+  
+  async function recargarCitasTrasCancelar() {
+    setLoading(true)
+    setErrorMessage('')
+    try {
+      const datos = await getCitas(pagina)
+      setCitas(datos)
+    } catch (error) {
+      setErrorMessage(
+        error.response?.data?.detail || 'No se pudo cargar el listado de citas.'
+      )
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const hayPaginaSiguiente = citas.length === TAMANO_PAGINA
+
+  function handleAbrirModalCancelar(cita) {
+    setErrorCancelar('')
+    setCitaACancelar(cita)
+  }
+
+  function handleCerrarModalCancelar() {
+    setCitaACancelar(null)
+    setErrorCancelar('')
+  }
+
+  async function handleConfirmarCancelar() {
+    setCancelando(true)
+    setErrorCancelar('')
+    try {
+      await cancelarCita(citaACancelar.id_cita)
+      setCitaACancelar(null)
+      await recargarCitasTrasCancelar()
+    } catch (error) {
+      setErrorCancelar(
+        error.response?.data?.detail || 'No se pudo cancelar la cita.'
+      )
+    } finally {
+      setCancelando(false)
+    }
+  }
 
   return (
     <>
@@ -82,6 +129,7 @@ function CitasPage() {
               <th>Mascota</th>
               <th>Veterinario</th>
               <th>Estado</th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -94,6 +142,20 @@ function CitasPage() {
                   <Badge bg={VARIANTE_POR_ESTADO[cita.estado] || 'dark'}>
                     {cita.estado}
                   </Badge>
+                </td>
+                <td>
+                  {cita.estado === 'agendada' && (
+                    <Dropdown>
+                      <Dropdown.Toggle variant="outline-secondary" size="sm">
+                        Acciones
+                      </Dropdown.Toggle>
+                      <Dropdown.Menu>
+                        <Dropdown.Item onClick={() => handleAbrirModalCancelar(cita)}>
+                          Cancelar cita
+                        </Dropdown.Item>
+                      </Dropdown.Menu>
+                    </Dropdown>
+                  )}
                 </td>
               </tr>
             ))}
@@ -117,6 +179,30 @@ function CitasPage() {
           Siguiente
         </Button>
       </div>
+
+      <Modal show={citaACancelar !== null} onHide={handleCerrarModalCancelar}>
+        <Modal.Header closeButton>
+          <Modal.Title>Cancelar cita</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {errorCancelar && <Alert variant="danger">{errorCancelar}</Alert>}
+          {citaACancelar && (
+            <p>
+              ¿Seguro que quieres cancelar la cita del{' '}
+              {formatearFechaHora(citaACancelar.fecha_hora)} con{' '}
+              {citaACancelar.mascota_nombre}? Esta acción no se puede deshacer.
+            </p>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleCerrarModalCancelar} disabled={cancelando}>
+            Volver
+          </Button>
+          <Button variant="danger" onClick={handleConfirmarCancelar} disabled={cancelando}>
+            {cancelando ? 'Cancelando...' : 'Sí, cancelar cita'}
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </>
   )
 }
