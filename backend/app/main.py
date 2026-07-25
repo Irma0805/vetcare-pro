@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import usuario, cita, veterinario, propietario, mascota
+from app.routers import usuario, cita, veterinario, propietario, mascota, tratamiento
 
 app = FastAPI(title="VetCare Pro API")
 
@@ -23,3 +23,4 @@ app.include_router(cita.router)
 app.include_router(veterinario.router)
 app.include_router(propietario.router)
 app.include_router(mascota.router)
+app.include_router(tratamiento.router)

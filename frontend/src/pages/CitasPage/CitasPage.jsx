@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router'
 import { Table, Spinner, Alert, Button, Badge, Dropdown, Modal, Form } from 'react-bootstrap'
-import { getCitas, cancelarCita, registrarDiagnostico } from '../../api/citas'
+import { getCitas, cancelarCita, registrarDiagnostico, asociarTratamiento } from '../../api/citas'
+import AsociarTratamientoModal from '../../components/organisms/AsociarTratamientoModal/AsociarTratamientoModal'
 
 const TAMANO_PAGINA = 10
 
@@ -36,6 +37,8 @@ function CitasPage() {
   const [diagnosticoTexto, setDiagnosticoTexto] = useState('')
   const [guardandoDiagnostico, setGuardandoDiagnostico] = useState(false)
   const [errorDiagnostico, setErrorDiagnostico] = useState('')
+
+  const [citaATratar, setCitaATratar] = useState(null)
 
   useEffect(() => {
     let ignore = false
@@ -139,6 +142,20 @@ function CitasPage() {
     }
   }
 
+  function handleAbrirModalTratamiento(cita) {
+    setCitaATratar(cita)
+  }
+
+  function handleCerrarModalTratamiento() {
+    setCitaATratar(null)
+  }
+
+ async function handleAsociarTratamiento(datos) {
+    const resultado = await asociarTratamiento(citaATratar.id_cita, datos)
+    await recargarCitas()
+    return resultado
+  } 
+
   return (
     <>
       <div className="d-flex justify-content-between align-items-center mb-3">
@@ -199,6 +216,11 @@ function CitasPage() {
                           {puedeDiagnosticar && (
                             <Dropdown.Item onClick={() => handleAbrirModalDiagnostico(cita)}>
                               Registrar diagnóstico
+                            </Dropdown.Item>
+                          )}
+                          {puedeDiagnosticar && (
+                            <Dropdown.Item onClick={() => handleAbrirModalTratamiento(cita)}>
+                              Asociar tratamiento
                             </Dropdown.Item>
                           )}
                         </Dropdown.Menu>
@@ -288,6 +310,13 @@ function CitasPage() {
           </Button>
         </Modal.Footer>
       </Modal>
+
+      <AsociarTratamientoModal
+        show={citaATratar !== null}
+        onHide={handleCerrarModalTratamiento}
+        cita={citaATratar}
+        onAsociar={handleAsociarTratamiento}
+      />
     </>
   )
 }
