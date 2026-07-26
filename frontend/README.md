@@ -1,16 +1,71 @@
-# React + Vite
+# VetCare Pro — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+SPA de React que consume la API de VetCare Pro. Ver el [README de la raíz](../README.md) para la visión general del proyecto y cómo levantar el backend.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **React 19** + **Vite** (JavaScript, sin TypeScript)
+- **React Router 8** en modo *declarative*
+- **React-Bootstrap** + **Bootstrap 5** (componentes de UI)
+- **Axios** (cliente HTTP, con interceptores JWT)
+- **Sass (SCSS)** — personalización de variables de Bootstrap
+- **vite-plugin-svgr** — importar SVG como componentes React
+- **Vitest** + **React Testing Library** — testing
+- **oxlint** — linter (basado en Rust)
 
-## React Compiler
+## Puesta en marcha
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Requiere el backend corriendo en `http://localhost:8000` (ver [README de la raíz](../README.md)).
 
-## Expanding the Oxlint configuration
+```bash
+npm install
+cp .env.example .env    # ya trae VITE_API_URL=http://localhost:8000
+npm run dev             # http://localhost:5173
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+## Scripts disponibles
+
+| Comando | Qué hace |
+|---|---|
+| `npm run dev` | Arranca el servidor de desarrollo (Vite) |
+| `npm run build` | Genera la build de producción |
+| `npm run preview` | Sirve la build de producción en local |
+| `npm run lint` | Ejecuta oxlint |
+| `npm run test` | Ejecuta los tests con Vitest |
+
+## Estructura de `src/`
+
+```
+src/
+├── main.jsx          # Punto de entrada: BrowserRouter + AuthProvider
+├── App.jsx           # Monta AppRoutes
+├── routes/           # Mapeo URL → página
+├── config/            # Lectura de variables de entorno
+├── context/           # Estado global (sesión del administrador)
+├── layout/             # Layout compartido (navbar)
+├── api/                # Llamadas HTTP a la API (axiosClient + una función por entidad)
+├── components/
+│   ├── molecules/      # Combinaciones pequeñas de componentes de Bootstrap
+│   └── organisms/      # Bloques compuestos (modales, formularios completos)
+├── pages/              # Una carpeta por pantalla
+├── styles/             # Variables de Bootstrap personalizadas (SCSS)
+├── assets/             # Iconos SVG
+└── test/               # Configuración global de Vitest
+```
+
+No existe una carpeta `components/atoms/`: ese nivel de Atomic Design lo cubren directamente los componentes de React-Bootstrap (`Button`, `Form.Control`, `Card`...), importados sin envoltorio propio.
+
+## Convenciones
+
+- **Solo las Pages** se conectan a `Context` o llaman a la API — `molecules`/`organisms` reciben siempre sus datos por props.
+- **CSS propio solo cuando Bootstrap no llega**: casi toda la interfaz usa clases de utilidad de Bootstrap directamente en el JSX; el único `.css` del proyecto es `LoginPage.module.css`, para los dos ajustes puntuales que Bootstrap no resuelve.
+- **Tests co-localizados**: cada componente/página vive junto a su propio `*.test.jsx`, siguiendo el patrón recomendado por React Testing Library — no hay una carpeta `tests/` separada, a diferencia del backend.
+- **Tríada obligatoria por pantalla**: validación de campos, error de API (mock 4xx) y éxito (mock 2xx), antes de dar una pantalla por cerrada.
+
+## Tests
+
+```bash
+npm run test
+```
+
+Axios se mockea en todos los tests — nunca se prueba contra el backend ni la base de datos real.
